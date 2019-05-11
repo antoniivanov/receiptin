@@ -1,81 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:gravity="center"
+              android:orientation="vertical"
+              android:padding="16dp"
+              tools:context="com.tozka.receptin.MainActivity">
 
-    <com.otaliastudios.cameraview.CameraView
-        android:id="@+id/cameraView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:adjustViewBounds="true" />
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/barcode_scanning_and_creation_demo"
+            android:textSize="20sp" />
 
-    <FrameLayout
-        android:id="@+id/framePreview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone">
-
-        <ImageView
-            android:id="@+id/imagePreview"
+    <View
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop" />
+            android:layout_height="0.5dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginTop="16dp"
+            android:background="@android:color/darker_gray" />
 
-        <ImageButton
-            android:id="@+id/btnRetry"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:layout_gravity="center"
-            android:background="@null"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_refresh" />
-
-    </FrameLayout>
-
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        android:id="@+id/layout_bottom_sheet"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#FAFAFA"
-        android:orientation="vertical"
-        app:layout_behavior="@string/bottom_sheet_behavior">
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyleHorizontal"
+    <Button
+            android:id="@+id/scanBarcodeButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:indeterminate="true"
-            android:visibility="gone" />
+            android:text="@string/scan_barcode" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:text="Detected Barcodes"
-            android:textSize="24sp" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvQrCode"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingLeft="8dp"
-            android:paddingRight="8dp" />
-
-    </LinearLayout>
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_take_photo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:src="@drawable/ic_camera"
-        app:backgroundTint="@color/colorPrimary"
-        app:fabSize="normal"
-        app:layout_anchor="@id/layout_bottom_sheet"
-        app:layout_anchorGravity="end"
-        app:rippleColor="@color/colorAccent" />
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</LinearLayout>
