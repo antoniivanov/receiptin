@@ -3,10 +3,11 @@ package com.tozka.receptin.login.ui.login
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import android.util.Patterns
 import com.tozka.receptin.R
 import com.tozka.receptin.login.data.LoginRepository
 import com.tozka.receptin.login.data.Result
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
 
 
 class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel() {
@@ -19,12 +20,16 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
 
     fun login(username: String, password: String) {
         // can be launched in a separate asynchronous job
-        val result = loginRepository.login(username, password)
-
-        if (result is Result.Success) {
-            _loginResult.value = LoginResult(success = LoggedInUserView(displayName = result.data.displayName))
-        } else {
-            _loginResult.value = LoginResult(error = R.string.login_failed)
+        doAsync {
+            val result = loginRepository.login(username, password)
+            uiThread {
+                if (result is Result.Success) {
+                    _loginResult.value = LoginResult(success = LoggedInUserView(displayName = result.data.displayName))
+                } else {
+                    // TODO:??
+                    _loginForm.value = LoginFormState(passwordError = R.string.login_failed)
+                }
+            }
         }
     }
 
@@ -38,17 +43,11 @@ class LoginViewModel(private val loginRepository: LoginRepository) : ViewModel()
         }
     }
 
-    // A placeholder username validation check
     private fun isUserNameValid(username: String): Boolean {
-        return if (username.contains('@')) {
-            Patterns.EMAIL_ADDRESS.matcher(username).matches()
-        } else {
-            username.isNotBlank()
-        }
+        return username.isNotBlank()
     }
 
-    // A placeholder password validation check
     private fun isPasswordValid(password: String): Boolean {
-        return password.length > 5;
+        return password.isNotBlank()
     }
 }

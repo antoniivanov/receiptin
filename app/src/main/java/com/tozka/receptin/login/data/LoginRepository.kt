@@ -1,6 +1,9 @@
 package com.tozka.receptin.login.data
 
+import android.content.Context
+import com.tozka.receptin.R
 import com.tozka.receptin.login.data.model.LoggedInUser
+import org.slf4j.LoggerFactory
 import java.security.KeyStore
 
 /**
@@ -8,7 +11,9 @@ import java.security.KeyStore
  * maintains an in-memory cache of login status and user credentials information.
  */
 
-class LoginRepository(val dataSource: LoginDataSource) {
+class LoginRepository(val dataSource: LoginDataSource, val context: Context) {
+
+    var log = LoggerFactory.getLogger(javaClass)
 
     // in-memory cache of the loggedInUser object
     var user: LoggedInUser? = null
@@ -18,8 +23,6 @@ class LoginRepository(val dataSource: LoginDataSource) {
         get() = user != null
 
     init {
-        // If user credentials will be cached in local storage, it is recommended it be encrypted
-        // @see https://developer.android.com/training/articles/keystore
         user = null
     }
 
@@ -31,6 +34,7 @@ class LoginRepository(val dataSource: LoginDataSource) {
     fun login(username: String, password: String): Result<LoggedInUser> {
         // handle login
         val result = dataSource.login(username, password)
+        log.info("Login result: $result")
 
         if (result is Result.Success) {
             setLoggedInUser(result.data)
@@ -41,9 +45,7 @@ class LoginRepository(val dataSource: LoginDataSource) {
 
     private fun setLoggedInUser(loggedInUser: LoggedInUser) {
         this.user = loggedInUser
-        var ks = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
-
-        // If user credentials will be cached in local storage, it is recommended it be encrypted
-        // @see https://developer.android.com/training/articles/keystore
+        val storage = LoginPhoneStorage(context)
+        storage.storeCredentials(loggedInUser)
     }
 }

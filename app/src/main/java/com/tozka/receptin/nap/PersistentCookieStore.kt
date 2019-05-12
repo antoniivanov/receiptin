@@ -6,7 +6,7 @@ import okhttp3.HttpUrl
 import okhttp3.CookieJar
 
 
-class CookieStore : CookieJar {
+class PersistentCookieStore : CookieJar {
 
     private val cookieStore = HashSet<Cookie>()
 

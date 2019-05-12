@@ -1,15 +1,19 @@
 package com.tozka.receptin.barcode
 
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import me.dm7.barcodescanner.zbar.Result
 import me.dm7.barcodescanner.zbar.ZBarScannerView
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
+import org.slf4j.LoggerFactory
+
+const val BARCODE_SCANNING_ACTIVITY_RESULT_HANDLER_KEY: String = "BARCODE_SCANNING_ACTIVITY_RESULT_HANDLER_KEY"
 
 class BarcodeScanningActivity : AppCompatActivity(), ZBarScannerView.ResultHandler {
 
-    private val tag : String = javaClass.simpleName
+    private val log = LoggerFactory.getLogger(javaClass)
 
     /*
     * Scanner View that will create the layout for scanning a barcode.
@@ -18,11 +22,17 @@ class BarcodeScanningActivity : AppCompatActivity(), ZBarScannerView.ResultHandl
     * add callbacks to obtain result from the fragment
     * */
     private lateinit var scannerView: ZBarScannerView
+    private lateinit var barcodeResultHandler: BarcodeResultHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         scannerView = ZBarScannerView(this)
         setContentView(scannerView)
+
+        val barcodeResultHandlerFactory: BarcodeResultHandlerFactory =
+            intent.extras.getSerializable(BARCODE_SCANNING_ACTIVITY_RESULT_HANDLER_KEY) as BarcodeResultHandlerFactory
+        barcodeResultHandler = barcodeResultHandlerFactory.newHandler()
+        log.info("Created ${javaClass.simpleName} with handler ${barcodeResultHandler.javaClass.simpleName}")
     }
 
     /*
@@ -31,10 +41,10 @@ class BarcodeScanningActivity : AppCompatActivity(), ZBarScannerView.ResultHandl
     * */
     override fun onResume() {
         super.onResume()
-        Log.i(tag, "Resume camera")
+        //log.debug( "Resume camera")
         scannerView.setResultHandler(this)
         scannerView.startCamera()
-     }
+    }
 
     override fun onPause() {
         super.onPause()
@@ -52,8 +62,23 @@ class BarcodeScanningActivity : AppCompatActivity(), ZBarScannerView.ResultHandl
     }
 
     override fun handleResult(result: Result?) {
-        Toast.makeText(this, result?.contents, Toast.LENGTH_SHORT).show()
-        Log.i(tag, "this is result $result maybe ${result?.contents}")
+        //Toast.makeText(this, result?.contents, Toast.LENGTH_SHORT).show()
+        log.debug("Handle result : ${result?.contents} with format ${result?.barcodeFormat?.name}")
+        doAsync {
+            val isOK = barcodeResultHandler.handle(BarcodeResult(result?.contents ?: ""))
+
+            uiThread {
+                if (!isOK) { // TODO - this should be in MainActivity
+                    val errorString = "Failed to register receipt"
+                    Toast.makeText(applicationContext, errorString, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext, errorString, Toast.LENGTH_SHORT).show()
+                } else {
+                    val message = "Succesffully registered receipt"
+                    Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
 
         //Camera will stop after scanning result, so we need to resume the
         //preview in order scan more codes

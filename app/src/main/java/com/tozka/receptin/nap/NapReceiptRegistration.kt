@@ -1,14 +1,14 @@
 package com.tozka.receptin.nap
 
 import com.tozka.receptin.ReceiptRegistration
+import com.tozka.receptin.login.data.Result
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.lang.IllegalStateException
+import java.io.Serializable
 import java.lang.RuntimeException
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
-import java.util.*
 
 
 const val NAP_MAIN_URL = "https://kasovbon.bg"
@@ -20,7 +20,7 @@ open class RegistrationException(message : String) : RuntimeException(message) {
 class LoginRegistrationException(message : String)  : RegistrationException(message) {}
 class FailedRegistrationException(message : String)  : RegistrationException(message) {}
 
-class NapReceiptRegistration(var username : String, var password : String) : ReceiptRegistration {
+class NapReceiptRegistration(var username : String, var password : String) : ReceiptRegistration, Serializable {
 
    // private val log = LoggerFactory.getLogger(javaClass)
 
@@ -44,7 +44,7 @@ class NapReceiptRegistration(var username : String, var password : String) : Rec
 
     fun newHttpClient(): OkHttpClient {
         return OkHttpClient.Builder().apply {
-            cookieJar(CookieStore())
+            cookieJar(PersistentCookieStore())
         }.build()
     }
 
@@ -53,35 +53,11 @@ class NapReceiptRegistration(var username : String, var password : String) : Rec
         //TODO: https://square.github.io/retrofit/
         // re-create client on each login
         client = newHttpClient()
-
-        val cookieRequest = Request.Builder().apply { url(NAP_MAIN_URL) }.build()
-        val cookieResponse = client.newCall(cookieRequest).execute()
-        if (cookieResponse.header("Set-Cookie") == null) {
-            throw LoginRegistrationException("Failed to authenticate. Cannot set cookie")
+        val loginDataSource = NapLoginDataSource(client)
+        val res = loginDataSource.login(username, password)
+        if (res is Result.Error) {
+            throw res.exception
         }
-
-        var loginFormBody = MultipartBody.Builder().apply {
-            setType(MultipartBody.FORM)
-            addFormDataPart("username", username)
-            addFormDataPart("password", password)
-        }.build()
-
-        var loginRequest = Request.Builder().apply {
-            url(NAP_LOGIN_URL)
-            post(loginFormBody)
-        }.build()
-
-        var loginResponse = client.newCall(loginRequest).execute()
-        var body = loginResponse?.body()?.string()
-
-        if (body == null) {
-            throw LoginRegistrationException("Failed to login. Unknown error")
-        }
-        if (body.contains("Паролата не съвпада с потребителското име") ||
-            body.contains("Несъществуващ потребител")) {
-            throw LoginRegistrationException("Failed to login. Bad password or username")
-        }
-
         isLoggedIn = true
     }
 
@@ -123,11 +99,11 @@ class NapReceiptRegistration(var username : String, var password : String) : Rec
      */
     }
 }
-
-fun main() {
-    var r = NapReceiptRegistration(username = "anthvt@yahoo.co.uk", password = "1123581321")
-    var d = GregorianCalendar().apply {
-        set(2019, 2, 3, 12, 32)
-    }.time
-    r.register(Receipt(d, 123.44, null))
-}
+//
+//fun main() {
+//    var r = NapReceiptRegistration(username = "anthvt@yahoo.co.uk", password = "1123581321")
+//    var d = GregorianCalendar().apply {
+//        set(2019, 2, 3, 12, 32)
+//    }.time
+//    r.register(Receipt(d, 123.64, null))
+//}

@@ -15,7 +15,9 @@ import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.Toast
 import com.tozka.receptin.R
+import com.tozka.receptin.login.data.LoginDataSourceFactory
 
+const val LOGIN_ACTIVITY_DATA_SOURCE_KEY = "LOGIN_ACTIVITY_DATA_SOURCE_KEY"
 
 class LoginActivity : AppCompatActivity() {
 
@@ -31,7 +33,11 @@ class LoginActivity : AppCompatActivity() {
         val login = findViewById<Button>(R.id.login)
         val loading = findViewById<ProgressBar>(R.id.loading)
 
-        loginViewModel = ViewModelProviders.of(this, LoginViewModelFactory())
+        val dataSourceFactory: LoginDataSourceFactory =
+            intent.extras.getSerializable(LOGIN_ACTIVITY_DATA_SOURCE_KEY) as LoginDataSourceFactory
+        val dataSource = dataSourceFactory.newDataSource()
+
+        loginViewModel = ViewModelProviders.of(this, LoginViewModelFactory(this, dataSource))
             .get(LoginViewModel::class.java)
 
         loginViewModel.loginFormState.observe(this@LoginActivity, Observer {
@@ -39,6 +45,10 @@ class LoginActivity : AppCompatActivity() {
 
             // disable login button unless both username / password is valid
             login.isEnabled = loginState.isDataValid
+
+            // TODO:??
+            loading.visibility = View.GONE
+
 
             if (loginState.usernameError != null) {
                 username.error = getString(loginState.usernameError)
@@ -98,7 +108,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun updateUiWithUser(model: LoggedInUserView) {
-        val welcome = getString(R.string.welcome)
+        val welcome = getString(R.string.welcome)  // TODO: handle translation
         val displayName = model.displayName
         // TODO : initiate successful logged in experience
         Toast.makeText(
@@ -109,6 +119,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun showLoginFailed(@StringRes errorString: Int) {
+        Toast.makeText(applicationContext, errorString, Toast.LENGTH_SHORT).show()
         Toast.makeText(applicationContext, errorString, Toast.LENGTH_SHORT).show()
     }
 }
